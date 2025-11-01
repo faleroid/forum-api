@@ -56,8 +56,9 @@ const createServer = async (container) => {
     const { response } = request;
 
     if (response instanceof Error) {
-      // bila response tersebut error, tangani sesuai kebutuhan
       const translatedError = DomainErrorTranslator.translate(response);
+
+      console.error('SERVER ERROR ASLI:', response);
 
       // penanganan client error secara internal.
       if (translatedError instanceof ClientError) {
