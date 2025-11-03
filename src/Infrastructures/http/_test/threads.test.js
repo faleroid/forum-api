@@ -170,4 +170,83 @@ describe('/threads endpoint', () => {
       expect(responseJson.status).toEqual('fail');
     });
   });
+
+  describe('when DELETE /threads/{threadId}/comments/{commentId}', () => {
+    it('should respond 200 and soft delete the comment', async () => {
+      // 1. Arrange
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+      await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: userId });
+
+      // 2. Action
+      const response = await server.inject({
+        method: 'DELETE',
+        url: `/threads/${threadId}/comments/${commentId}`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // 3. Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.status).toEqual('success');
+
+      // 4. Assert
+      const comments = await CommentsTableTestHelper.findCommentById(commentId);
+      expect(comments).toHaveLength(1);
+      expect(comments[0].is_delete).toEqual(true);
+    });
+
+    it('should respond 403 when user is not the owner', async () => {
+      // 1. Arrange
+      const ownerId = 'user-123';
+      const impostorId = 'user-456';
+      await UsersTableTestHelper.addUser({ id: ownerId, username: 'owner' });
+
+      const { accessToken: impostorToken } = await ServerTestHelper
+        .getAccessTokenAndUserId({ server, username: 'impostor', id: impostorId });
+
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: ownerId });
+      await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: ownerId });
+
+      // 2. Action
+      const response = await server.inject({
+        method: 'DELETE',
+        url: `/threads/${threadId}/comments/${commentId}`,
+        headers: {
+          Authorization: `Bearer ${impostorToken}`,
+        },
+      });
+
+      // 3. Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(403);
+      expect(responseJson.status).toEqual('fail');
+    });
+
+    it('should respond 404 when comment is not found', async () => {
+      // 1. Arrange
+      const threadId = 'thread-123';
+      const invalidCommentId = 'comment-xxxx';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+
+      // 2. Action
+      const response = await server.inject({
+        method: 'DELETE',
+        url: `/threads/${threadId}/comments/${invalidCommentId}`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // 3. Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(404);
+      expect(responseJson.status).toEqual('fail');
+    });
+  });
 });

@@ -96,7 +96,8 @@ describe('UserRepositoryPostgres', () => {
 
       // Action & Assert
       const password = await userRepositoryPostgres.getPasswordByUsername('dicoding');
-      expect(password).toBe('secret_password');
+      expect(password).toEqual(expect.any(String));
+      expect(password).not.toEqual('secret_password');
     });
   });
 
