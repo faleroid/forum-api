@@ -249,4 +249,82 @@ describe('/threads endpoint', () => {
       expect(responseJson.status).toEqual('fail');
     });
   });
+
+  describe('when GET /threads/{threadId}', () => {
+    it('should respond 200 and return thread details correctly', async () => {
+      // Arrange
+      
+      const threadId = 'thread-123';
+      const commentId1 = 'comment-123';
+      const commentId2 = 'comment-456';
+      
+      const dateComment1 = new Date('2023-10-28T10:00:00Z').toISOString();
+      const dateComment2 = new Date('2023-10-28T09:00:00Z').toISOString();
+
+      await ThreadsTableTestHelper.addThread({
+        id: threadId,
+        title: 'Judul Thread',
+        body: 'Body Thread',
+        owner: userId,
+      });
+
+      await CommentsTableTestHelper.addComment({
+        id: commentId1,
+        content: 'Komentar Kedua',
+        threadId: threadId,
+        owner: userId,
+        date: dateComment1,
+      });
+      await CommentsTableTestHelper.addComment({
+        id: commentId2,
+        content: 'Komentar Pertama (dihapus)',
+        threadId: threadId,
+        owner: userId,
+        date: dateComment2,
+        isDelete: true,
+      });
+
+      // Action
+      const response = await server.inject({
+        method: 'GET',
+        url: `/threads/${threadId}`,
+      });
+
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.status).toEqual('success');
+
+      const { thread } = responseJson.data;
+      expect(thread).toBeDefined();
+      expect(thread.id).toEqual(threadId);
+      expect(thread.title).toEqual('Judul Thread');
+      expect(thread.body).toEqual('Body Thread');
+      expect(thread.username).toEqual('dicodingtest');
+
+      expect(thread.comments).toBeInstanceOf(Array);
+      expect(thread.comments).toHaveLength(2);
+
+      expect(thread.comments[0].id).toEqual(commentId2);
+      expect(thread.comments[1].id).toEqual(commentId1);
+
+      expect(thread.comments[0].content).toEqual('**komentar telah dihapus**');
+      expect(thread.comments[1].content).toEqual('Komentar Kedua');
+    });
+
+    it('should respond 404 when thread is not found', async () => {
+      // Arrange
+      const invalidThreadId = 'thread-xxxx';
+
+      // Action
+      const response = await server.inject({
+        method: 'GET',
+        url: `/threads/${invalidThreadId}`,
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(404);
+      expect(responseJson.status).toEqual('fail');
+    });
+  });
 });

@@ -122,4 +122,64 @@ describe('CommentRepositoryPostgres integration test', () => {
       expect(comments[0].is_delete).toEqual(true);
     });
   });
+
+  describe('getCommentsByThreadId function', () => {
+    it('should return an empty array if thread has no comments', async () => {
+      // Arrange
+      // (Kita hanya perlu user dan thread, tanpa komentar)
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123', owner: 'user-123' });
+      
+      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
+
+      // Action
+      const comments = await commentRepositoryPostgres.getCommentsByThreadId('thread-123');
+
+      // Assert
+      expect(comments).toBeInstanceOf(Array);
+      expect(comments).toHaveLength(0);
+    });
+
+    it('should return all comments from a thread with correct details and order', async () => {
+      // Arrange
+      await UsersTableTestHelper.addUser({ id: 'user-123', username: 'dicoding' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123', owner: 'user-123' });
+
+      const date1 = new Date('2023-10-28T07:10:00Z').toISOString();
+      const date2 = new Date('2023-10-28T07:05:00Z').toISOString();
+      
+      await CommentsTableTestHelper.addComment({
+        id: 'comment-123',
+        content: 'Komentar kedua',
+        threadId: 'thread-123',
+        owner: 'user-123',
+        date: date1,
+      });
+      await CommentsTableTestHelper.addComment({
+        id: 'comment-456',
+        content: 'Komentar pertama',
+        threadId: 'thread-123',
+        owner: 'user-123',
+        date: date2,
+        isDelete: true,
+      });
+
+      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
+
+      // Action
+      const comments = await commentRepositoryPostgres.getCommentsByThreadId('thread-123');
+
+      // Assert
+      expect(comments).toHaveLength(2);
+      expect(comments[0].id).toEqual('comment-456');
+      expect(comments[0].username).toEqual('dicoding');
+      expect(comments[0].content).toEqual('Komentar pertama');
+      expect(comments[0].is_delete).toEqual(true);
+      
+      expect(comments[1].id).toEqual('comment-123');
+      expect(comments[1].username).toEqual('dicoding');
+      expect(comments[1].content).toEqual('Komentar kedua');
+      expect(comments[1].is_delete).toEqual(false);
+    });
+  });
 });
