@@ -403,4 +403,84 @@ describe('/threads endpoint', () => {
       expect(responseJson.status).toEqual('fail');
     });
   });
+
+  describe('when DELETE /threads/{threadId}/comments/{commentId}/replies/{replyId}', () => {
+    it('should respond 200 and soft delete the reply', async () => {
+      // 1. Arrange
+      //    (Kita butuh user, thread, comment, dan reply yang valid)
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+      const replyId = 'reply-123';
+      // 'userId' dan 'accessToken' sudah ada dari beforeEach
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+      await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: userId });
+      await RepliesTableTestHelper.addReply({ id: replyId, commentId, owner: userId });
+
+      // 2. Action (Jalankan endpoint DELETE)
+      const response = await server.inject({
+        method: 'DELETE',
+        url: `/threads/${threadId}/comments/${commentId}/replies/${replyId}`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`, // Wajib pakai token pemilik
+        },
+      });
+
+      // 3. Assert (Verifikasi respons server)
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.status).toEqual('success');
+
+      // 4. Assert (Verifikasi database: soft delete)
+      const replies = await RepliesTableTestHelper.findReplyById(replyId);
+      expect(replies).toHaveLength(1); // Data masih ada
+      expect(replies[0].is_delete).toEqual(true); // 'is_delete' jadi true
+    });
+
+    it('should respond 403 when user is not the owner', async () => {
+      const ownerId = 'user-123';
+      const impostorId = 'user-456';
+      await UsersTableTestHelper.addUser({ id: ownerId, username: 'owner' });
+      const { accessToken: impostorToken } = await ServerTestHelper
+        .getAccessTokenAndUserId({ server, username: 'impostor', id: impostorId });
+
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+      const replyId = 'reply-123';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: ownerId });
+      await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: ownerId });
+      await RepliesTableTestHelper.addReply({ id: replyId, commentId, owner: ownerId });
+
+      const response = await server.inject({
+        method: 'DELETE',
+        url: `/threads/${threadId}/comments/${commentId}/replies/${replyId}`,
+        headers: {
+          Authorization: `Bearer ${impostorToken}`,
+        },
+      });
+
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(403);
+      expect(responseJson.status).toEqual('fail');
+    });
+
+    it('should respond 404 when reply is not found', async () => {
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+      const invalidReplyId = 'reply-xxxx';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+      await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: userId });
+
+      const response = await server.inject({
+        method: 'DELETE',
+        url: `/threads/${threadId}/comments/${commentId}/replies/${invalidReplyId}`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(404);
+      expect(responseJson.status).toEqual('fail');
+    });
+  });
 });
