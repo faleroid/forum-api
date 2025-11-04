@@ -5,6 +5,7 @@ const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const ServerTestHelper = require('../../../../tests/ServerTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
+const RepliesTableTestHelper = require('../../../../tests/RepliesTestTableHelper');
 
 describe('/threads endpoint', () => {
   let server;
@@ -24,6 +25,7 @@ describe('/threads endpoint', () => {
   });
 
   afterEach(async () => {
+    await RepliesTableTestHelper.cleanTable();
     await ThreadsTableTestHelper.cleanTable();
     await UsersTableTestHelper.cleanTable();
     await CommentsTableTestHelper.cleanTable();
@@ -251,9 +253,7 @@ describe('/threads endpoint', () => {
   });
 
   describe('when GET /threads/{threadId}', () => {
-    it('should respond 200 and return thread details correctly', async () => {
-      // Arrange
-      
+    it('should respond 200 and return thread details correctly', async () => {    
       const threadId = 'thread-123';
       const commentId1 = 'comment-123';
       const commentId2 = 'comment-456';
@@ -322,6 +322,82 @@ describe('/threads endpoint', () => {
       });
 
       // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(404);
+      expect(responseJson.status).toEqual('fail');
+    });
+  });
+
+  describe('when POST /threads/{threadId}/comments/{commentId}/replies', () => {
+    it('should respond 201 and persisted reply', async () => {
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+      await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: userId });
+
+      const requestPayload = {
+        content: 'Ini adalah balasan tes E2E',
+      };
+
+      const response = await server.inject({
+        method: 'POST',
+        url: `/threads/${threadId}/comments/${commentId}/replies`,
+        payload: requestPayload,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(201);
+      expect(responseJson.status).toEqual('success');
+      expect(responseJson.data.addedReply).toBeDefined();
+      expect(responseJson.data.addedReply.content).toEqual(requestPayload.content);
+      expect(responseJson.data.addedReply.owner).toEqual(userId);
+
+      const replies = await RepliesTableTestHelper.findReplyById(responseJson.data.addedReply.id);
+      expect(replies).toHaveLength(1);
+    });
+
+    it('should respond 400 when request payload not contain needed property', async () => {
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+      await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: userId });
+      const requestPayload = {};
+
+      const response = await server.inject({
+        method: 'POST',
+        url: `/threads/${threadId}/comments/${commentId}/replies`,
+        payload: requestPayload,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(400);
+      expect(responseJson.status).toEqual('fail');
+    });
+
+    it('should respond 404 when comment is not found', async () => {
+      const threadId = 'thread-123';
+      const invalidCommentId = 'comment-xxxx';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+      const requestPayload = {
+        content: 'Balasan di komentar hantu',
+      };
+
+      const response = await server.inject({
+        method: 'POST',
+        url: `/threads/${threadId}/comments/${invalidCommentId}/replies`,
+        payload: requestPayload,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(404);
       expect(responseJson.status).toEqual('fail');

@@ -1,15 +1,12 @@
-// Impor Helpers
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const AuthorizationError = require('../../../Commons/exceptions/AuthorizationError');
 const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 
-// Impor Infrastruktur
 const pool = require('../../database/postgres/pool');
 const CommentRepositoryPostgres = require('../CommentRepositoryPostgres');
 
-// Impor Entities
 const AddComment = require('../../../Domains/comments/entities/AddComment');
 const AddedComment = require('../../../Domains/comments/entities/AddedComment');
 
@@ -180,6 +177,27 @@ describe('CommentRepositoryPostgres integration test', () => {
       expect(comments[1].username).toEqual('dicoding');
       expect(comments[1].content).toEqual('Komentar kedua');
       expect(comments[1].is_delete).toEqual(false);
+    });
+  });
+
+  describe('verifyCommentExists function', () => {
+    it('should throw NotFoundError when comment not found', async () => {
+      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
+      const invalidCommentId = 'comment-xxxx';
+
+      await expect(commentRepositoryPostgres.verifyCommentExists(invalidCommentId))
+        .rejects.toThrow(NotFoundError);
+    });
+
+    it('should not throw NotFoundError when comment exists', async () => {
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123', owner: 'user-123' });
+      await CommentsTableTestHelper.addComment({ id: 'comment-123', threadId: 'thread-123', owner: 'user-123' });
+      
+      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
+
+      await expect(commentRepositoryPostgres.verifyCommentExists('comment-123'))
+        .resolves.not.toThrow(NotFoundError);
     });
   });
 });

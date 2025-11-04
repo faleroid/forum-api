@@ -18,7 +18,6 @@ describe('AddCommentUseCase', () => {
       owner: useCasePayload.owner,
     });
 
-    //mock
     const mockThreadRepository = new ThreadRepository();
     const mockCommentRepository = new CommentRepository();
 

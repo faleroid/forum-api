@@ -1,7 +1,5 @@
 const ThreadRepository = require('../../Domains/threads/ThreadRepository');
 const AddedThread = require('../../Domains/threads/entities/AddedThread');
-const ThreadDetail = require('../../Domains/threads/entities/ThreadDetail');
-const CommentDetail = require('../../Domains/comments/entities/CommentDetail');
 const NotFoundError = require('../../Commons/exceptions/NotFoundError');
 
 class ThreadRepositoryPostgres extends ThreadRepository {

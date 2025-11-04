@@ -1,6 +1,7 @@
 const AddThreadUseCase = require('../../../../Applications/use_case/AddThreadUseCase');
 const GetThreadUseCase = require('../../../../Applications/use_case/GetThreadUseCase');
 const AddCommentUseCase = require('../../../../Applications/use_case/AddCommentUseCase');
+const AddReplyUseCase = require('../../../../Applications/use_case/AddReplyUseCase');
 const DeleteCommentUseCase = require('../../../../Applications/use_case/DeleteCommentUseCase');
 
 class ThreadsHandler{
@@ -11,6 +12,7 @@ class ThreadsHandler{
 		this.postCommentToThreadHandler = this.postCommentToThreadHandler.bind(this);
 		this.deleteCommentHandler = this.deleteCommentHandler.bind(this);
 		this.getThreadByIdHandler = this.getThreadByIdHandler.bind(this);
+		this.postReplyToCommentHandler = this.postReplyToCommentHandler.bind(this);
 	}
 
 	async postThreadsHandler(request, h){
@@ -91,7 +93,32 @@ class ThreadsHandler{
 				thread,
 			},
 		};
-  }
+  	}
+
+	async postReplyToCommentHandler(request, h){
+		const { id: owner } = request.auth.credentials;
+		const { threadId, commentId } = request.params;
+
+		const useCasePayload = {
+			owner,
+			threadId,
+			commentId,
+			content: request.payload.content,
+		}
+
+		const addReplyUseCase = this._container.getInstance(AddReplyUseCase.name);
+		const addedReply = await addReplyUseCase.execute(useCasePayload)
+
+		const response = h.response({
+			status: 'success',
+			data: {
+				addedReply,
+			},
+		});
+		response.code(201);
+
+		return response;
+	}
 }
 
 module.exports = ThreadsHandler;
