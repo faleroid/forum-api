@@ -1,4 +1,4 @@
-const AddUserUseCase = require('../../../../Applications/use_case/AddUserUseCase');
+const AddUserUseCase = require("../../../../Applications/use_case/AddUserUseCase");
 
 class UsersHandler {
   constructor(container) {
@@ -12,7 +12,7 @@ class UsersHandler {
     const addedUser = await addUserUseCase.execute(request.payload);
 
     const response = h.response({
-      status: 'success',
+      status: "success",
       data: {
         addedUser,
       },

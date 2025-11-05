@@ -1,5 +1,5 @@
-const { payload } = require('@hapi/hapi/lib/validation');
-const RegisterUser = require('../../Domains/users/entities/RegisterUser');
+const { payload } = require("@hapi/hapi/lib/validation");
+const RegisterUser = require("../../Domains/users/entities/RegisterUser");
 
 class AddUserUseCase {
   constructor({ userRepository, passwordHash }) {
@@ -11,8 +11,10 @@ class AddUserUseCase {
     const registerUser = new RegisterUser(useCasePayload);
 
     await this._userRepository.verifyAvailableUsername(registerUser.username);
-    registerUser.password = await this._passwordHash.hash(registerUser.password);
-    
+    registerUser.password = await this._passwordHash.hash(
+      registerUser.password,
+    );
+
     return this._userRepository.addUser(registerUser);
   }
 }

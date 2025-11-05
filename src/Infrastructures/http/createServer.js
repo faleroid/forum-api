@@ -1,11 +1,11 @@
-const Hapi = require('@hapi/hapi');
-const Jwt = require('@hapi/jwt');
-const ClientError = require('../../Commons/exceptions/ClientError');
-const DomainErrorTranslator = require('../../Commons/exceptions/DomainErrorTranslator');
+const Hapi = require("@hapi/hapi");
+const Jwt = require("@hapi/jwt");
+const ClientError = require("../../Commons/exceptions/ClientError");
+const DomainErrorTranslator = require("../../Commons/exceptions/DomainErrorTranslator");
 
-const users = require('../../Interfaces/http/api/users');
-const authentications = require('../../Interfaces/http/api/authentications');
-const threads = require('../../Interfaces/http/api/threads');
+const users = require("../../Interfaces/http/api/users");
+const authentications = require("../../Interfaces/http/api/authentications");
+const threads = require("../../Interfaces/http/api/threads");
 
 const createServer = async (container) => {
   const server = Hapi.server({
@@ -19,7 +19,7 @@ const createServer = async (container) => {
     },
   ]);
 
-  server.auth.strategy('forumapi_jwt', 'jwt', {
+  server.auth.strategy("forumapi_jwt", "jwt", {
     keys: process.env.ACCESS_TOKEN_KEY,
     verify: {
       aud: false,
@@ -48,10 +48,9 @@ const createServer = async (container) => {
       plugin: threads,
       options: { container },
     },
-
   ]);
 
-  server.ext('onPreResponse', (request, h) => {
+  server.ext("onPreResponse", (request, h) => {
     const { response } = request;
 
     if (response instanceof Error) {
@@ -61,7 +60,7 @@ const createServer = async (container) => {
 
       if (translatedError instanceof ClientError) {
         const newResponse = h.response({
-          status: 'fail',
+          status: "fail",
           message: translatedError.message,
         });
         newResponse.code(translatedError.statusCode);
@@ -73,8 +72,8 @@ const createServer = async (container) => {
       }
 
       const newResponse = h.response({
-        status: 'error',
-        message: 'terjadi kegagalan pada server kami',
+        status: "error",
+        message: "terjadi kegagalan pada server kami",
       });
       newResponse.code(500);
       return newResponse;

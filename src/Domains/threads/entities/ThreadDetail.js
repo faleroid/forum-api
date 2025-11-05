@@ -1,3 +1,3 @@
-class ThreadDetail{}
+class ThreadDetail {}
 
 module.exports = ThreadDetail;

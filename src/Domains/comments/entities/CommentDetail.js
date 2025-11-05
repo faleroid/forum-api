@@ -1,3 +1,3 @@
-class CommentDetail{}
+class CommentDetail {}
 
 module.exports = CommentDetail;

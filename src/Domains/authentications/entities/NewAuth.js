@@ -10,11 +10,11 @@ class NewAuth {
     const { accessToken, refreshToken } = payload;
 
     if (!accessToken || !refreshToken) {
-      throw new Error('NEW_AUTH.NOT_CONTAIN_NEEDED_PROPERTY');
+      throw new Error("NEW_AUTH.NOT_CONTAIN_NEEDED_PROPERTY");
     }
 
-    if (typeof accessToken !== 'string' || typeof refreshToken !== 'string') {
-      throw new Error('NEW_AUTH.NOT_MEET_DATA_TYPE_SPECIFICATION');
+    if (typeof accessToken !== "string" || typeof refreshToken !== "string") {
+      throw new Error("NEW_AUTH.NOT_MEET_DATA_TYPE_SPECIFICATION");
     }
   }
 }

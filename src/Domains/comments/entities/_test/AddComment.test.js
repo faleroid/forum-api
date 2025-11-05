@@ -1,12 +1,12 @@
-const AddComment = require('../AddComment');
+const AddComment = require("../AddComment");
 
-describe('an AddComment entity', () => {
-  it('should create AddComment object correctly', () => {
+describe("an AddComment entity", () => {
+  it("should create AddComment object correctly", () => {
     // Arrange
     const payload = {
-      content: 'Ini adalah komentar.',
-      owner: 'user-123',
-      threadId: 'thread-123',
+      content: "Ini adalah komentar.",
+      owner: "user-123",
+      threadId: "thread-123",
     };
 
     // Action
@@ -18,26 +18,30 @@ describe('an AddComment entity', () => {
     expect(threadId).toEqual(payload.threadId);
   });
 
-  it('should throw error when payload did not contain needed property', () => {
+  it("should throw error when payload did not contain needed property", () => {
     // Arrange
     const payload = {
-      content: 'Ini komentar',
-      owner: 'user-123',
+      content: "Ini komentar",
+      owner: "user-123",
     };
 
     // Action & Assert
-    expect(() => new AddComment(payload)).toThrow('ADD_COMMENT.NOT_CONTAIN_NEEDED_PROPERTY');
+    expect(() => new AddComment(payload)).toThrow(
+      "ADD_COMMENT.NOT_CONTAIN_NEEDED_PROPERTY",
+    );
   });
 
-  it('should throw error when payload did not meet data type specification', () => {
+  it("should throw error when payload did not meet data type specification", () => {
     // Arrange
     const payload = {
       content: 12345,
-      owner: 'user-123',
-      threadId: 'thread-123',
+      owner: "user-123",
+      threadId: "thread-123",
     };
 
     // Action & Assert
-    expect(() => new AddComment(payload)).toThrow('ADD_COMMENT.NOT_MEET_DATA_TYPE_SPECIFICATION');
+    expect(() => new AddComment(payload)).toThrow(
+      "ADD_COMMENT.NOT_MEET_DATA_TYPE_SPECIFICATION",
+    );
   });
 });
