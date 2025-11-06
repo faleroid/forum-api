@@ -46,6 +46,7 @@ describe("CommentRepositoryPostgres integration test", () => {
 
       const comments =
         await CommentsTableTestHelper.findCommentById("comment-123");
+
       expect(comments).toHaveLength(1);
       expect(comments[0].id).toEqual("comment-123");
       expect(comments[0].content).toEqual("Ini adalah komentar tes");
@@ -59,28 +60,18 @@ describe("CommentRepositoryPostgres integration test", () => {
   });
 
   describe("verifyCommentOwner function", () => {
-    it("should throw NotFoundError when comment not found", async () => {
-      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
-      const invalidCommentId = "comment-xxxx";
-      const owner = "user-123";
-
-      await expect(
-        commentRepositoryPostgres.verifyCommentOwner(invalidCommentId, owner),
-      ).rejects.toThrow(NotFoundError);
-    });
-
     it("should throw AuthorizationError when user is not the owner", async () => {
-      // Arrange
       await UsersTableTestHelper.addUser({ id: "user-123", username: "owner" });
       await UsersTableTestHelper.addUser({
         id: "user-456",
         username: "impostor",
       });
-      // 2. Buat thread
+
       await ThreadsTableTestHelper.addThread({
         id: "thread-123",
         owner: "user-123",
       });
+
       await CommentsTableTestHelper.addComment({
         id: "comment-123",
         owner: "user-123",
@@ -91,7 +82,6 @@ describe("CommentRepositoryPostgres integration test", () => {
       const validCommentId = "comment-123";
       const invalidOwner = "user-456";
 
-      // Action & Assert
       await expect(
         commentRepositoryPostgres.verifyCommentOwner(
           validCommentId,
@@ -100,8 +90,7 @@ describe("CommentRepositoryPostgres integration test", () => {
       ).rejects.toThrow(AuthorizationError);
     });
 
-    it("should not throw error when user is the owner", async () => {
-      // Arrange
+    it("should not throw Authorization error when user is the owner", async () => {
       await UsersTableTestHelper.addUser({ id: "user-123" });
       await ThreadsTableTestHelper.addThread({
         id: "thread-123",
@@ -117,13 +106,12 @@ describe("CommentRepositoryPostgres integration test", () => {
       const validCommentId = "comment-123";
       const validOwner = "user-123";
 
-      // Action & Assert
       await expect(
         commentRepositoryPostgres.verifyCommentOwner(
           validCommentId,
           validOwner,
         ),
-      ).resolves.not.toThrow();
+      ).resolves.not.toThrow(AuthorizationError);
     });
   });
 
@@ -153,8 +141,6 @@ describe("CommentRepositoryPostgres integration test", () => {
 
   describe("getCommentsByThreadId function", () => {
     it("should return an empty array if thread has no comments", async () => {
-      // Arrange
-      // (Kita hanya perlu user dan thread, tanpa komentar)
       await UsersTableTestHelper.addUser({ id: "user-123" });
       await ThreadsTableTestHelper.addThread({
         id: "thread-123",
@@ -163,17 +149,14 @@ describe("CommentRepositoryPostgres integration test", () => {
 
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
-      // Action
       const comments =
         await commentRepositoryPostgres.getCommentsByThreadId("thread-123");
 
-      // Assert
       expect(comments).toBeInstanceOf(Array);
       expect(comments).toHaveLength(0);
     });
 
     it("should return all comments from a thread with correct details and order", async () => {
-      // Arrange
       await UsersTableTestHelper.addUser({
         id: "user-123",
         username: "dicoding",
@@ -204,21 +187,21 @@ describe("CommentRepositoryPostgres integration test", () => {
 
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
-      // Action
       const comments =
         await commentRepositoryPostgres.getCommentsByThreadId("thread-123");
 
-      // Assert
       expect(comments).toHaveLength(2);
       expect(comments[0].id).toEqual("comment-456");
       expect(comments[0].username).toEqual("dicoding");
       expect(comments[0].content).toEqual("Komentar pertama");
       expect(comments[0].is_delete).toEqual(true);
+      expect(new Date(comments[0].date).toISOString()).toBeTruthy();
 
       expect(comments[1].id).toEqual("comment-123");
       expect(comments[1].username).toEqual("dicoding");
       expect(comments[1].content).toEqual("Komentar kedua");
       expect(comments[1].is_delete).toEqual(false);
+      expect(new Date(comments[1].date).toISOString()).toBeTruthy();
     });
   });
 

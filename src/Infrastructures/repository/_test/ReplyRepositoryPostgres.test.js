@@ -65,16 +65,6 @@ describe("ReplyRepositoryPostgres integration test", () => {
   });
 
   describe("verifyReplyOwner function", () => {
-    it("should throw NotFoundError when reply not found", async () => {
-      const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
-      const invalidReplyId = "reply-xxxx";
-      const owner = "user-123";
-
-      await expect(
-        replyRepositoryPostgres.verifyReplyOwner(invalidReplyId, owner),
-      ).rejects.toThrow(NotFoundError);
-    });
-
     it("should throw AuthorizationError when user is not the owner", async () => {
       await UsersTableTestHelper.addUser({ id: "user-123", username: "owner" });
       await UsersTableTestHelper.addUser({
@@ -104,31 +94,27 @@ describe("ReplyRepositoryPostgres integration test", () => {
         replyRepositoryPostgres.verifyReplyOwner(validReplyId, invalidOwner),
       ).rejects.toThrow(AuthorizationError);
     });
+  });
 
-    it("should not throw error when user is the owner", async () => {
-      await UsersTableTestHelper.addUser({ id: "user-123" });
-      await ThreadsTableTestHelper.addThread({
-        id: "thread-123",
-        owner: "user-123",
-      });
-      await CommentsTableTestHelper.addComment({
-        id: "comment-123",
-        owner: "user-123",
-        threadId: "thread-123",
-      });
-      await RepliesTableTestHelper.addReply({
-        id: "reply-123",
-        owner: "user-123",
-        commentId: "comment-123",
-      });
-
+  describe('verifyReplyExists function', () => {
+    it('should throw NotFoundError when reply not found', async () => {
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
-      const validReplyId = "reply-123";
-      const validOwner = "user-123";
+      const invalidReplyId = 'reply-xxxx';
 
-      await expect(
-        replyRepositoryPostgres.verifyReplyOwner(validReplyId, validOwner),
-      ).resolves.not.toThrow();
+      await expect(replyRepositoryPostgres.verifyReplyExists(invalidReplyId))
+        .rejects.toThrow(NotFoundError);
+    });
+
+    it('should not throw NotFoundError when reply exists', async () => {
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123', owner: 'user-123' });
+      await CommentsTableTestHelper.addComment({ id: 'comment-123', threadId: 'thread-123', owner: 'user-123' });
+      await RepliesTableTestHelper.addReply({ id: 'reply-123', commentId: 'comment-123', owner: 'user-123' });
+      
+      const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
+
+      await expect(replyRepositoryPostgres.verifyReplyExists('reply-123'))
+        .resolves.not.toThrow(NotFoundError);
     });
   });
 

@@ -55,25 +55,25 @@ describe("GetThreadUseCase", () => {
       id: "thread-123",
       title: "Judul Thread",
       body: "Body Thread",
-      date: new Date("2023-10-28T07:00:00Z"),
+      date: dbThread.date.toISOString(),
       username: "dicoding",
       comments: [
         {
           id: "comment-123",
           username: "johndoe",
-          date: new Date("2023-10-28T07:10:00Z"),
+          date: dbComments[0].date.toISOString(),
           content: "Komentar pertama",
           replies: [
             {
               id: "reply-123",
               username: "dicoding",
-              date: new Date("2023-10-28T07:11:00Z"),
+              date: dbReplies[0].date.toISOString(),
               content: "Balasan pertama",
             },
             {
               id: "reply-456",
               username: "johndoe",
-              date: new Date("2023-10-28T07:12:00Z"),
+              date: dbReplies[1].date.toISOString(),
               content: "**balasan telah dihapus**",
             },
           ],
@@ -81,7 +81,7 @@ describe("GetThreadUseCase", () => {
         {
           id: "comment-456",
           username: "dicoding",
-          date: new Date("2023-10-28T07:15:00Z"),
+          date: dbComments[1].date.toISOString(),
           content: "**komentar telah dihapus**",
           replies: [],
         },

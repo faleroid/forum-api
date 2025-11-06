@@ -10,6 +10,7 @@ class DeleteReplyUseCase {
 
     await this._threadRepository.verifyThreadExists(threadId);
     await this._commentRepository.verifyCommentExists(commentId);
+    await this._replyRepository.verifyReplyExists(replyId);
     await this._replyRepository.verifyReplyOwner(replyId, owner);
     await this._replyRepository.deleteReply(replyId);
   }

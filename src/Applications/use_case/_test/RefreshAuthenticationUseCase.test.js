@@ -1,82 +1,56 @@
-const AuthenticationRepository = require("../../../Domains/authentications/AuthenticationRepository");
-const AuthenticationTokenManager = require("../../security/AuthenticationTokenManager");
-const RefreshAuthenticationUseCase = require("../RefreshAuthenticationUseCase");
+const AddReplyUseCase = require('../AddReplyUseCase');
+const AddReply = require('../../../Domains/replies/entities/AddReply');
+const AddedReply = require('../../../Domains/replies/entities/AddedReply');
+const ThreadRepository = require('../../../Domains/threads/ThreadRepository');
+const CommentRepository = require('../../../Domains/comments/CommentRepository');
+const ReplyRepository = require('../../../Domains/replies/ReplyRepository');
 
-describe("RefreshAuthenticationUseCase", () => {
-  it("should throw error if use case payload not contain refresh token", async () => {
-    // Arrange
-    const useCasePayload = {};
-    const refreshAuthenticationUseCase = new RefreshAuthenticationUseCase({});
-
-    // Action & Assert
-    await expect(
-      refreshAuthenticationUseCase.execute(useCasePayload),
-    ).rejects.toThrowError(
-      "REFRESH_AUTHENTICATION_USE_CASE.NOT_CONTAIN_REFRESH_TOKEN",
-    );
-  });
-
-  it("should throw error if refresh token not string", async () => {
-    // Arrange
+describe('AddReplyUseCase', () => {
+  it('should orchestrating the add reply action correctly', async () => {
     const useCasePayload = {
-      refreshToken: 1,
+      content: 'Ini adalah balasan baru',
+      threadId: 'thread-123',
+      commentId: 'comment-123',
+      owner: 'user-123',
     };
-    const refreshAuthenticationUseCase = new RefreshAuthenticationUseCase({});
 
-    // Action & Assert
-    await expect(
-      refreshAuthenticationUseCase.execute(useCasePayload),
-    ).rejects.toThrowError(
-      "REFRESH_AUTHENTICATION_USE_CASE.PAYLOAD_NOT_MEET_DATA_TYPE_SPECIFICATION",
-    );
-  });
-
-  it("should orchestrating the refresh authentication action correctly", async () => {
-    // Arrange
-    const useCasePayload = {
-      refreshToken: "some_refresh_token",
-    };
-    const mockAuthenticationRepository = new AuthenticationRepository();
-    const mockAuthenticationTokenManager = new AuthenticationTokenManager();
-    // Mocking
-    mockAuthenticationRepository.checkAvailabilityToken = jest
-      .fn()
-      .mockImplementation(() => Promise.resolve());
-    mockAuthenticationTokenManager.verifyRefreshToken = jest
-      .fn()
-      .mockImplementation(() => Promise.resolve());
-    mockAuthenticationTokenManager.decodePayload = jest
-      .fn()
-      .mockImplementation(() =>
-        Promise.resolve({ username: "dicoding", id: "user-123" }),
-      );
-    mockAuthenticationTokenManager.createAccessToken = jest
-      .fn()
-      .mockImplementation(() => Promise.resolve("some_new_access_token"));
-    // Create the use case instace
-    const refreshAuthenticationUseCase = new RefreshAuthenticationUseCase({
-      authenticationRepository: mockAuthenticationRepository,
-      authenticationTokenManager: mockAuthenticationTokenManager,
+    const mockAddedReply = new AddedReply({
+      id: 'reply-123',
+      content: useCasePayload.content,
+      owner: useCasePayload.owner,
     });
 
-    // Action
-    const accessToken =
-      await refreshAuthenticationUseCase.execute(useCasePayload);
-
-    // Assert
-    expect(mockAuthenticationTokenManager.verifyRefreshToken).toBeCalledWith(
-      useCasePayload.refreshToken,
-    );
-    expect(mockAuthenticationRepository.checkAvailabilityToken).toBeCalledWith(
-      useCasePayload.refreshToken,
-    );
-    expect(mockAuthenticationTokenManager.decodePayload).toBeCalledWith(
-      useCasePayload.refreshToken,
-    );
-    expect(mockAuthenticationTokenManager.createAccessToken).toBeCalledWith({
-      username: "dicoding",
-      id: "user-123",
+    const expectedAddedReply = new AddedReply({
+      id: 'reply-123',
+      content: useCasePayload.content,
+      owner: useCasePayload.owner,
     });
-    expect(accessToken).toEqual("some_new_access_token");
+
+    const mockThreadRepository = new ThreadRepository();
+    const mockCommentRepository = new CommentRepository();
+    const mockReplyRepository = new ReplyRepository();
+
+    mockThreadRepository.verifyThreadExists = jest.fn(() => Promise.resolve());
+    mockCommentRepository.verifyCommentExists = jest.fn(() => Promise.resolve());
+    mockReplyRepository.addReply = jest.fn(() => Promise.resolve(mockAddedReply));
+
+    const addReplyUseCase = new AddReplyUseCase({
+      threadRepository: mockThreadRepository,
+      commentRepository: mockCommentRepository,
+      replyRepository: mockReplyRepository,
+    });
+
+    const addedReply = await addReplyUseCase.execute(useCasePayload);
+
+    expect(addedReply).toStrictEqual(expectedAddedReply);
+    expect(mockThreadRepository.verifyThreadExists).toBeCalledWith(useCasePayload.threadId);
+    expect(mockCommentRepository.verifyCommentExists).toBeCalledWith(useCasePayload.commentId);
+    expect(mockReplyRepository.addReply).toBeCalledWith(
+      new AddReply({
+        content: useCasePayload.content,
+        commentId: useCasePayload.commentId,
+        owner: useCasePayload.owner,
+      })
+    );
   });
 });

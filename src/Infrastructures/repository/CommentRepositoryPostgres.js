@@ -36,10 +36,6 @@ class CommentRepositoryPostgres extends CommentRepository {
     const result = await this._pool.query(query);
     const comment = result.rows[0];
 
-    if (result.rowCount === 0) {
-      throw new NotFoundError("Komentar tidak ditemukan");
-    }
-
     if (comment.owner !== owner) {
       throw new AuthorizationError(
         "Anda tidak berhak untuk mengakses resource ini",
@@ -59,16 +55,16 @@ class CommentRepositoryPostgres extends CommentRepository {
   async getCommentsByThreadId(threadId) {
     const query = {
       text: `
-                SELECT 
-                comments.id, 
-                users.username, 
-                comments.date, 
-                comments.content, 
-                comments.is_delete
-                FROM comments
-                JOIN users ON comments.owner = users.id
-                WHERE comments.thread_id = $1
-                ORDER BY comments.date ASC
+            SELECT 
+            comments.id, 
+            users.username, 
+            comments.date, 
+            comments.content, 
+            comments.is_delete
+            FROM comments
+            JOIN users ON comments.owner = users.id
+            WHERE comments.thread_id = $1
+            ORDER BY comments.date ASC
             `,
       values: [threadId],
     };
