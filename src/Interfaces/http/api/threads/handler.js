@@ -1,3 +1,6 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+const autoBind = require('auto-bind');
+
 const AddThreadUseCase = require("../../../../Applications/use_case/AddThreadUseCase");
 const GetThreadUseCase = require("../../../../Applications/use_case/GetThreadUseCase");
 const AddCommentUseCase = require("../../../../Applications/use_case/AddCommentUseCase");
@@ -5,17 +8,12 @@ const AddReplyUseCase = require("../../../../Applications/use_case/AddReplyUseCa
 const DeleteCommentUseCase = require("../../../../Applications/use_case/DeleteCommentUseCase");
 const DeleteReplyUseCase = require("../../../../Applications/use_case/DeleteReplyUseCase");
 
+
 class ThreadsHandler {
   constructor(container) {
     this._container = container;
 
-    this.postThreadsHandler = this.postThreadsHandler.bind(this);
-    this.postCommentToThreadHandler =
-      this.postCommentToThreadHandler.bind(this);
-    this.deleteCommentHandler = this.deleteCommentHandler.bind(this);
-    this.getThreadByIdHandler = this.getThreadByIdHandler.bind(this);
-    this.postReplyToCommentHandler = this.postReplyToCommentHandler.bind(this);
-    this.deleteReplyHandler = this.deleteReplyHandler.bind(this);
+    autoBind(this);
   }
 
   async postThreadsHandler(request, h) {

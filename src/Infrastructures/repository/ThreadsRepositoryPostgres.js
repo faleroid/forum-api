@@ -18,7 +18,7 @@ class ThreadRepositoryPostgres extends ThreadRepository {
 
     const query = {
       text: "INSERT INTO threads(id, title, body, owner, date) VALUES($1, $2, $3, $4, $5) RETURNING id, title, owner",
-      values: [idThread, title, body, owner, date],
+      values: [idThread, title, body, owner, new Date(date).toISOString()],
     };
 
     const result = await this._pool.query(query);
@@ -54,7 +54,15 @@ class ThreadRepositoryPostgres extends ThreadRepository {
       throw new NotFoundError("thread tidak ditemukan");
     }
 
-    return result.rows[0];
+    const row = result.rows[0];
+    
+    return {
+      id: row.id,
+      title: row.title,
+      body: row.body,
+      username: row.username,
+      date: new Date(row.date).toISOString(),
+    }
   }
 }
 
