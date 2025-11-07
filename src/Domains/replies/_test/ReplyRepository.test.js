@@ -16,5 +16,8 @@ describe("ReplyRepository interface", () => {
     await expect(replyRepository.getRepliesByThreadId({})).rejects.toThrow(
       "REPLY_REPOSITORY.METHOD_NOT_IMPLEMENTED",
     );
+    await expect(replyRepository.verifyReplyExists({})).rejects.toThrow(
+      "REPLY_REPOSITORY.METHOD_NOT_IMPLEMENTED",
+    );
   });
 });
