@@ -166,8 +166,8 @@ describe("CommentRepositoryPostgres integration test", () => {
         owner: "user-123",
       });
 
-      const date1 = new Date("2023-10-28T07:10:00Z").toISOString();
-      const date2 = new Date("2023-10-28T07:05:00Z").toISOString();
+      const date1 = new Date().toISOString();
+      const date2 = new Date().toISOString();
 
       await CommentsTableTestHelper.addComment({
         id: "comment-123",
@@ -191,17 +191,18 @@ describe("CommentRepositoryPostgres integration test", () => {
         await commentRepositoryPostgres.getCommentsByThreadId("thread-123");
 
       expect(comments).toHaveLength(2);
+      
       expect(comments[0].id).toEqual("comment-456");
       expect(comments[0].username).toEqual("dicoding");
       expect(comments[0].content).toEqual("Komentar pertama");
       expect(comments[0].is_delete).toEqual(true);
-      expect(new Date(comments[0].date).toISOString()).toBeTruthy();
+      expect(new Date(comments[0].date).toISOString()).toStrictEqual(date2);
 
       expect(comments[1].id).toEqual("comment-123");
       expect(comments[1].username).toEqual("dicoding");
       expect(comments[1].content).toEqual("Komentar kedua");
       expect(comments[1].is_delete).toEqual(false);
-      expect(new Date(comments[1].date).toISOString()).toBeTruthy();
+      expect(new Date(comments[1].date).toISOString()).toStrictEqual(date1);
     });
   });
 

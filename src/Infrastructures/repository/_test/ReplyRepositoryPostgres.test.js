@@ -215,14 +215,14 @@ describe("ReplyRepositoryPostgres integration test", () => {
       expect(replies[0].content).toEqual("Balasan pertama (dihapus)");
       expect(replies[0].is_delete).toEqual(true);
       expect(replies[0].comment_id).toEqual("comment-123");
-      expect(new Date(replies[0].date).toISOString()).toBeTruthy();
+      expect(new Date(replies[0].date).toISOString()).toStrictEqual(date2);
 
       expect(replies[1].id).toEqual("reply-123");
       expect(replies[1].username).toEqual("dicoding");
       expect(replies[1].content).toEqual("Balasan kedua");
       expect(replies[1].is_delete).toEqual(false);
       expect(replies[1].comment_id).toEqual("comment-123");
-      expect(new Date(replies[1].date).toISOString()).toBeTruthy();
+      expect(new Date(replies[1].date).toISOString()).toStrictEqual(date1);
     });
   });
 });

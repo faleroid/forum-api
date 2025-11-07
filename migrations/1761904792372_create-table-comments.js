@@ -21,9 +21,8 @@ exports.up = (pgm) => {
       notNull: true,
     },
     date: {
-      type: 'timestamp',
+      type: 'timestamptz',
       notNull: true,
-      default: pgm.func('current_timestamp'),
     },
     is_delete: {
       type: 'boolean',

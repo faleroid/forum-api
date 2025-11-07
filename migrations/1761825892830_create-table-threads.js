@@ -23,7 +23,6 @@ exports.up = (pgm) => {
     date: {
       type: 'timestamptz',
       notNull: true,
-      default: pgm.func('current_timestamp'),
     },
   });
 
@@ -37,5 +36,6 @@ exports.up = (pgm) => {
 };
 
 exports.down = (pgm) => {
-  pgm.dropTable('threads');
+  pgm.dropConstraint('threads', 'fk_threads.owner_users.id');
+  pgm.dropTable('threads');
 };
