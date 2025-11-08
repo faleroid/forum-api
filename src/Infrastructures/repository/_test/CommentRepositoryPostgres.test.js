@@ -166,8 +166,8 @@ describe("CommentRepositoryPostgres integration test", () => {
         owner: "user-123",
       });
 
-      const date1 = new Date().toISOString();
-      const date2 = new Date().toISOString();
+      const date1 = new Date("2023-10-28T10:10:00Z").toISOString();
+      const date2 = new Date("2023-10-28T10:05:00Z").toISOString();
 
       await CommentsTableTestHelper.addComment({
         id: "comment-123",
