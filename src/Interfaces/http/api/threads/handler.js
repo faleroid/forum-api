@@ -7,11 +7,13 @@ const AddCommentUseCase = require("../../../../Applications/use_case/AddCommentU
 const AddReplyUseCase = require("../../../../Applications/use_case/AddReplyUseCase");
 const DeleteCommentUseCase = require("../../../../Applications/use_case/DeleteCommentUseCase");
 const DeleteReplyUseCase = require("../../../../Applications/use_case/DeleteReplyUseCase");
+const LikeCommentUseCase = require("../../../../Applications/use_case/LikeCommentUseCase");
 
 
 class ThreadsHandler {
   constructor(container) {
     this._container = container;
+    this.putLikeCommentHandler = this.putLikeCommentHandler.bind(this);
 
     autoBind(this);
   }
@@ -143,6 +145,27 @@ class ThreadsHandler {
     return {
       status: "success",
     };
+  }
+
+  async putLikeCommentHandler(request, h) {
+    const { threadId, commentId } = request.params;
+    const { id: owner } = request.auth.credentials;
+
+    const useCasePayload = {
+      threadId,
+      commentId,
+      owner,
+    };
+
+    const likeCommentUseCase = this._container.getInstance(LikeCommentUseCase.name);
+    await likeCommentUseCase.execute(useCasePayload);
+
+    const response = h.response({
+      status: 'success',
+    });
+    response.code(200);
+    
+    return response;
   }
 }
 

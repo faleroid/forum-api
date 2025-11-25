@@ -6,6 +6,7 @@ const ThreadsTableTestHelper = require("../../../../tests/ThreadsTableTestHelper
 const ServerTestHelper = require("../../../../tests/ServerTestHelper");
 const CommentsTableTestHelper = require("../../../../tests/CommentsTableTestHelper");
 const RepliesTableTestHelper = require("../../../../tests/RepliesTestTableHelper");
+const LikesTableTestHelper = require("../../../../tests/LikesTableTestHelper");
 
 describe("/threads endpoint", () => {
   let server;
@@ -26,6 +27,7 @@ describe("/threads endpoint", () => {
   });
 
   afterEach(async () => {
+    await LikesTableTestHelper.cleanTable();
     await RepliesTableTestHelper.cleanTable();
     await ThreadsTableTestHelper.cleanTable();
     await UsersTableTestHelper.cleanTable();
@@ -535,6 +537,70 @@ describe("/threads endpoint", () => {
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(404);
       expect(responseJson.status).toEqual("fail");
+    });
+  });
+
+  describe('when PUT /threads/{threadId}/comments/{commentId}/likes', () => {
+    it('should respond 200 and persist like', async () => {
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+      await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: userId });
+
+      const response = await server.inject({
+        method: 'PUT',
+        url: `/threads/${threadId}/comments/${commentId}/likes`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const responseJson = JSON.parse(response.payload);
+      const likes = await LikesTableTestHelper.findLikeByCommentIdAndOwner(commentId, userId);
+
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.status).toEqual('success');
+      expect(likes).toHaveLength(1);
+    });
+
+    it('should respond 200 and remove like (unlike) if already liked', async () => {
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+      await CommentsTableTestHelper.addComment({ id: commentId, threadId, owner: userId });
+      await LikesTableTestHelper.addLike({ id: 'like-123', commentId, owner: userId });
+
+      const response = await server.inject({
+        method: 'PUT',
+        url: `/threads/${threadId}/comments/${commentId}/likes`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.status).toEqual('success');
+
+      const likes = await LikesTableTestHelper.findLikeByCommentIdAndOwner(commentId, userId);
+      expect(likes).toHaveLength(0);
+    });
+
+    it('should respond 404 when comment not found', async () => {
+      const threadId = 'thread-123';
+      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+
+      const response = await server.inject({
+        method: 'PUT',
+        url: `/threads/${threadId}/comments/comment-404/likes`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(404);
+      expect(responseJson.status).toEqual('fail');
     });
   });
 });
