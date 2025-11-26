@@ -5,7 +5,7 @@ const LikesTableTestHelper = {
   async addLike({
     id = 'like-123',
     commentId = 'comment-123',
-    owner = 'user-123',
+    owner,
   }) {
     const query = {
       text: 'INSERT INTO likes VALUES($1, $2, $3)',

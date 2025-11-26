@@ -22,6 +22,7 @@ describe("GetThreadUseCase", () => {
         date: new Date("2023-10-28T07:10:00Z"),
         content: "Komentar pertama",
         is_delete: false,
+        like_count: 2,
       },
       {
         id: "comment-456",
@@ -29,6 +30,7 @@ describe("GetThreadUseCase", () => {
         date: new Date("2023-10-28T07:15:00Z"),
         content: "Komentar yang dihapus",
         is_delete: true,
+        like_count: 0,
       },
     ];
 
@@ -62,6 +64,7 @@ describe("GetThreadUseCase", () => {
           id: "comment-123",
           username: "johndoe",
           date: dbComments[0].date.toISOString(),
+          likeCount: 2,
           content: "Komentar pertama",
           replies: [
             {
@@ -83,6 +86,7 @@ describe("GetThreadUseCase", () => {
           username: "dicoding",
           date: dbComments[1].date.toISOString(),
           content: "**komentar telah dihapus**",
+          likeCount: 0,
           replies: [],
         },
       ],

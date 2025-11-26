@@ -1,6 +1,7 @@
 const CommentsTableTestHelper = require("../../../../tests/CommentsTableTestHelper");
 const UsersTableTestHelper = require("../../../../tests/UsersTableTestHelper");
 const ThreadsTableTestHelper = require("../../../../tests/ThreadsTableTestHelper");
+const LikesTableTestHelper = require('../../../../tests/LikesTableTestHelper');
 const AuthorizationError = require("../../../Commons/exceptions/AuthorizationError");
 const NotFoundError = require("../../../Commons/exceptions/NotFoundError");
 
@@ -12,6 +13,7 @@ const AddedComment = require("../../../Domains/comments/entities/AddedComment");
 
 describe("CommentRepositoryPostgres integration test", () => {
   afterEach(async () => {
+    await LikesTableTestHelper.cleanTable();
     await CommentsTableTestHelper.cleanTable();
     await ThreadsTableTestHelper.cleanTable();
     await UsersTableTestHelper.cleanTable();
@@ -161,6 +163,12 @@ describe("CommentRepositoryPostgres integration test", () => {
         id: "user-123",
         username: "dicoding",
       });
+      
+      await UsersTableTestHelper.addUser({
+         id: 'user-456', 
+         username: 'johndoe' 
+        });
+
       await ThreadsTableTestHelper.addThread({
         id: "thread-123",
         owner: "user-123",
@@ -185,13 +193,21 @@ describe("CommentRepositoryPostgres integration test", () => {
         isDelete: true,
       });
 
+      await LikesTableTestHelper.addLike({ id: 'like-1', commentId: 'comment-123', owner: 'user-123' });
+      await LikesTableTestHelper.addLike({ id: 'like-2', commentId: 'comment-123', owner: 'user-456' });
+
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       const comments =
         await commentRepositoryPostgres.getCommentsByThreadId("thread-123");
 
       expect(comments).toHaveLength(2);
-      
+
+      expect(comments[0].id).toEqual('comment-456');
+      expect(comments[0].like_count).toEqual('0');
+      expect(comments[1].id).toEqual('comment-123');
+      expect(comments[1].like_count).toEqual('2');
+
       expect(comments[0].id).toEqual("comment-456");
       expect(comments[0].username).toEqual("dicoding");
       expect(comments[0].content).toEqual("Komentar pertama");
