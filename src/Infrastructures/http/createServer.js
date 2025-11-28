@@ -1,4 +1,6 @@
 const Hapi = require("@hapi/hapi");
+const h2o2 = require('@hapi/h2o2');
+
 const Jwt = require("@hapi/jwt");
 const ClientError = require("../../Commons/exceptions/ClientError");
 const DomainErrorTranslator = require("../../Commons/exceptions/DomainErrorTranslator");
@@ -12,6 +14,8 @@ const createServer = async (container) => {
     host: process.env.HOST,
     port: process.env.PORT,
   });
+
+  await server.register(h2o2);
 
   await server.register([
     {
